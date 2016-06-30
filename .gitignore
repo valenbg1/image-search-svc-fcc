@@ -1,6 +1,7 @@
 .eslintrc
 .c9/
-mongod
+mongod.sh
+envvars.sh
 data/
 
 
