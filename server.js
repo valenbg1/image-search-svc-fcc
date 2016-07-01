@@ -6,14 +6,40 @@ var jsonCSAPIkey = process.env.JSON_CS_API_KEY;
 var jsonCSAPIurl = "https://www.googleapis.com/customsearch/v1?key=" +
         jsonCSAPIkey + "&cx=" + searchEngineID;
 
-function results(query, offset, callback) {
-    https.get(jsonCSAPIurl + "&q=" + query,
+function imgSearch(query, offset, callback) {
+    var req = https.get(jsonCSAPIurl + "&searchType=image" + "&q=" + query,
         function(res) {
             res.setEncoding("utf8");
             var data = "";
             
             res.on("data", function(chunk) {data += chunk;});
-            res.on("end", function() {callback(data)});
+            res.on("end",
+                function() {
+                    console.log(data + "\n\n");
+                    data = JSON.parse(data);
+                    data = data.items;
+                    var ret = [];
+                    
+                    for (var key in data) {
+                        var img = data[key];
+                        
+                        ret.push({
+                            url: img.link,
+                            mime: img.mime,
+                            snippet: img.snippet,
+                            thumbnail: img.image.thumbnailLink,
+                            context: img.image.contextLink
+                        });
+                    }
+                    
+                    callback(ret);
+                });
+        });
+        
+    req.on("error",
+        function(err) {
+            console.error(err);
+            callback();
         });
 }
 
@@ -23,7 +49,7 @@ function endStringJSON(str, res) {
 }
 
 function endJSON(json, res) {
-    endStringJSON(JSON.stringify(json), res);
+    endStringJSON(JSON.stringify(json) || "", res);
 }
 
 function printErrorAndEnd(err, res) {
@@ -34,12 +60,16 @@ function printErrorAndEnd(err, res) {
 app.get("/imagesearch/:query",
     function(req, res) {
         var query = req.params.query;
+        var offset = req.query.offset;
         
-        results(query, 0,
+        imgSearch(query, offset,
             function(data) {
-                endStringJSON(data, res);
+                endJSON(data, res);
             });
     });
+    
+if (!searchEngineID || !jsonCSAPIkey)
+    throw new Error("Required env vars not set");
 
 var port = process.env.PORT || 8080;
 app.listen(port,
