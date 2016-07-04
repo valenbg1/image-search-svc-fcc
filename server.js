@@ -5,9 +5,12 @@ var searchEngineID = process.env.SEARCH_ENGINE_ID;
 var jsonCSAPIkey = process.env.JSON_CS_API_KEY;
 var jsonCSAPIurl = "https://www.googleapis.com/customsearch/v1?key=" +
         jsonCSAPIkey + "&cx=" + searchEngineID;
+var nResults = 10;
 
 function imgSearch(query, offset, callback) {
-    var req = https.get(jsonCSAPIurl + "&searchType=image" + "&q=" + query,
+    var searchUrl = jsonCSAPIurl + "&searchType=image" + "&num=" + nResults +
+        "&start=" + calculateIndex(offset) + "&q=" + query;
+    var req = https.get(searchUrl,
         function(res) {
             res.setEncoding("utf8");
             var data = "";
@@ -15,7 +18,7 @@ function imgSearch(query, offset, callback) {
             res.on("data", function(chunk) {data += chunk;});
             res.on("end",
                 function() {
-                    console.log(data + "\n\n");
+                    //console.log(searchUrl + ":\n" + data + "\n\n");
                     data = JSON.parse(data);
                     data = data.items;
                     var ret = [];
@@ -43,6 +46,10 @@ function imgSearch(query, offset, callback) {
         });
 }
 
+function calculateIndex(offset) {
+    return (offset * nResults) + 1;
+}
+
 function endStringJSON(str, res) {
     res.writeHead(200, {"Content-Type": "application/json"});
     res.end(str);
@@ -61,6 +68,9 @@ app.get("/imagesearch/:query",
     function(req, res) {
         var query = req.params.query;
         var offset = req.query.offset;
+        
+        if (isNaN(offset) || (offset < 0))
+            offset = 0;
         
         imgSearch(query, offset,
             function(data) {
