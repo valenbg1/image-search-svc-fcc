@@ -1,6 +1,6 @@
 var mongoose = require("mongoose");
 var mongodb_url = process.env.MONGOLAB_URI;
-var nRecents = 5;
+var nRecents = 15;
 var RecentSearchDoc;
 
 var connection = mongoose.createConnection(mongodb_url);
@@ -25,7 +25,7 @@ connection.once("open",
         });
         recentSearchSchema.methods.insertRotating = insertRotating;
 
-        RecentSearchDoc = connection.model("RecentSearchs", recentSearchSchema);
+        RecentSearchDoc = connection.model("RecentSearches", recentSearchSchema);
     });
     
 function insertRotating(callback) {
@@ -35,12 +35,23 @@ function insertRotating(callback) {
         function(err, count) {
             if (err) {
                 callback(err, null);
-                return;
             } else if (count >= nRecents) {
-                console.log(count);
-            }
-            
-             recentSearchDoc.save(callback);
+                RecentSearchDoc.find({$query: {}, $orderby: {_id : 1}},
+                    function(err, data) {
+                        if (err)
+                            callback(err, null);
+                        else {
+                            RecentSearchDoc.remove({_id: data[0]._id},
+                                function(err) {
+                                    if (err)
+                                        callback(err, null);
+                                    else
+                                        recentSearchDoc.save(callback);
+                                });
+                        }
+                    });
+            } else
+                recentSearchDoc.save(callback);
         });
 }
 

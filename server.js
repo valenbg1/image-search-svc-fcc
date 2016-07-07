@@ -89,7 +89,7 @@ app.get("/imagesearch/:query",
     });
 
 /*  
-app.get("/recentsearchs",
+app.get("/recentsearches",
     function(req, res) {
         endJSON(db.RecentSearchDoc.find());
     });
