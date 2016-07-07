@@ -96,6 +96,8 @@ app.get("/recentsearches",
             });
     });
     
+app.use("/", express.static("public"));
+    
 if (!searchEngineID || !jsonCSAPIkey)
     throw new Error("Required env vars not set");
 

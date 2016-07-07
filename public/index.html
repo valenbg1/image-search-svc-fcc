@@ -1,0 +1,38 @@
+<!doctype html>
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        
+        <title>Image search abstraction layer service</title>
+    </head>
+    
+    <body>
+        <h1>Image search abstraction layer service</h1>
+        
+        <table>
+            <tr>
+                <td><b>User Story:</b> <em>"I can get the image URLs, alt text and page urls for a set of images relating to a given search string"</em>.</td>
+            </tr>
+            <tr>
+                <td><b>User Story:</b> <em>"I can paginate through the responses by adding a ?offset=2 parameter to the URL"</em>.</td>
+            </tr>
+            <tr>
+                <td><b>User Story:</b> <em>"I can get a list of the most recently submitted search strings"</em>.</td>
+            </tr>
+        </table>
+        
+        <h2>Example search usage:</h2>
+            <code>http://valenbg1-image-search-svc-fcc.herokuapp.com/imagesearch/lolcats</code><br>
+            <code>http://valenbg1-image-search-svc-fcc.herokuapp.com/imagesearch/javascript?offset=4</code>
+            
+        <h2>Example search output:</h2>
+            <code>[{"url":"https://upload.wikimedia.org/wikipedia/commons/1/1a/Cat_crying_(Lolcat).jpg","mime":"image/jpeg","snippet":"Lolcat","thumbnail":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhYHRZ-aoumwW08SSvzu9xXEvuZX9yxaeYs1wQiw_ZYizo8uZvxtQs69Xj","context":"https://en.wikipedia.org/wiki/Lolcat"},{"url":"https://bighugelabs.com/img/lolcat-sample.jpg","mime":"image/jpeg","snippet":"... for LOLCats posters.","thumbnail":"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLZvE_rt1xa7D0cTj5U985Plyf0Xzm_LR8_-Cpidg7TdGgCMVssUjvB-o","context":"https://bighugelabs.com/lolcat.php"}, ...]</code>
+        
+        <h2>Example recent queries usage:</h2>
+            <code>http://valenbg1-image-search-svc-fcc.herokuapp.com/recentsearches</code>
+            
+        <h2>Example recent queries output:</h2>
+            <code>[{"term":"lolcats","when":"2016-07-07T15:19:29.000Z"},{"term":"lolcats","when":"2016-07-07T15:19:23.000Z"}, ...]</code>
+    </body>
+</html>
