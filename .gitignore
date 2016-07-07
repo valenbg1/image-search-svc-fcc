@@ -1,7 +1,6 @@
 .eslintrc
 .c9/
 mongod.sh
-envvars.sh
 CSAPIex_out.json
 data/
 

@@ -1,6 +1,7 @@
 var express = require("express");
 var app = express();
 var https = require("https");
+var db = require("./db.js");
 var searchEngineID = process.env.SEARCH_ENGINE_ID;
 var jsonCSAPIkey = process.env.JSON_CS_API_KEY;
 var jsonCSAPIurl = "https://www.googleapis.com/customsearch/v1?key=" +
@@ -16,7 +17,7 @@ function imgSearch(query, offset, callback) {
             var data = "";
             
             res.on("data", function(chunk) {data += chunk;});
-            res.on("end",
+            res.once("end",
                 function() {
                     //console.log(searchUrl + ":\n" + data + "\n\n");
                     data = JSON.parse(data);
@@ -39,7 +40,7 @@ function imgSearch(query, offset, callback) {
                 });
         });
         
-    req.on("error",
+    req.once("error",
         function(err) {
             console.error(err);
             callback();
@@ -56,7 +57,7 @@ function endStringJSON(str, res) {
 }
 
 function endJSON(json, res) {
-    endStringJSON(JSON.stringify(json) || "", res);
+    endStringJSON(json ? JSON.stringify(json) : "", res);
 }
 
 function printErrorAndEnd(err, res) {
@@ -72,17 +73,36 @@ app.get("/imagesearch/:query",
         if (isNaN(offset) || (offset < 0))
             offset = 0;
         
+        /**/
         imgSearch(query, offset,
             function(data) {
                 endJSON(data, res);
             });
+        /**/
+        //res.end();
+            
+        db.insertQuery(query,
+            function(err) {
+                if (err)
+                    console.error(err);
+            });
     });
+
+/*  
+app.get("/recentsearchs",
+    function(req, res) {
+        endJSON(db.RecentSearchDoc.find());
+    });
+*/
     
 if (!searchEngineID || !jsonCSAPIkey)
     throw new Error("Required env vars not set");
 
-var port = process.env.PORT || 8080;
-app.listen(port,
+db.connection.once("open",
     function() {
-        console.log("Node.js listening on port " + port + "...");
+        var port = process.env.PORT || 8080;
+        app.listen(port,
+            function() {
+                console.log("Node.js listening on port " + port + "...");
+            });
     });
