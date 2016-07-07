@@ -73,13 +73,10 @@ app.get("/imagesearch/:query",
         if (isNaN(offset) || (offset < 0))
             offset = 0;
         
-        /**/
         imgSearch(query, offset,
             function(data) {
                 endJSON(data, res);
             });
-        /**/
-        //res.end();
             
         db.insertQuery(query,
             function(err) {
@@ -88,12 +85,16 @@ app.get("/imagesearch/:query",
             });
     });
 
-/*  
 app.get("/recentsearches",
     function(req, res) {
-        endJSON(db.RecentSearchDoc.find());
+        db.findRecentQueries(
+            function(err, recentSearches) {
+                if (err)
+                    printErrorAndEnd(err, res);
+                else
+                    endJSON(recentSearches, res);
+            });
     });
-*/
     
 if (!searchEngineID || !jsonCSAPIkey)
     throw new Error("Required env vars not set");

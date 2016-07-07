@@ -13,7 +13,7 @@ connection.once("error",
 
 connection.once("open",
     function() {
-        console.log("Connected to MongoDB on '" + mongodb_url + "'");
+        //console.log("Connected to MongoDB on '" + mongodb_url + "'");
             
         var recentSearchSchema = mongoose.Schema({
             term: {
@@ -37,11 +37,11 @@ function insertRotating(callback) {
                 callback(err, null);
             } else if (count >= nRecents) {
                 RecentSearchDoc.find({$query: {}, $orderby: {_id : 1}},
-                    function(err, data) {
+                    function(err, recentSearches) {
                         if (err)
                             callback(err, null);
                         else {
-                            RecentSearchDoc.remove({_id: data[0]._id},
+                            RecentSearchDoc.remove({_id: recentSearches[0]._id},
                                 function(err) {
                                     if (err)
                                         callback(err, null);
@@ -57,4 +57,24 @@ function insertRotating(callback) {
 
 exports.insertQuery = function insertQuery(query, callback) {
     new RecentSearchDoc({term: query}).insertRotating(callback);
+};
+
+exports.findRecentQueries = function findRecentQueries(callback) {
+    RecentSearchDoc.find({$query: {}, $orderby: {_id : -1}},
+        function(err, recentSearches) {
+            if (err)
+                callback(err, null);
+            else {
+                var ret = [];
+                
+                for (var key in recentSearches) {
+                    ret.push({
+                        term: recentSearches[key].term,
+                        when: new Date(parseInt(recentSearches[key]._id.toString().substring(0, 8), 16) * 1000)
+                    });
+                }
+                
+                callback(null, ret);
+            }
+        });
 };
