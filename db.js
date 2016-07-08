@@ -3,6 +3,7 @@ var mongodb_url = process.env.MONGOLAB_URI;
 var nRecents = 15;
 var RecentSearchDoc;
 
+mongoose.Promise = global.Promise;
 var connection = mongoose.createConnection(mongodb_url);
 exports.connection = connection;
 
@@ -36,20 +37,21 @@ function insertRotating(callback) {
             if (err) {
                 callback(err, null);
             } else if (count >= nRecents) {
-                RecentSearchDoc.find({$query: {}, $orderby: {_id : 1}},
-                    function(err, recentSearches) {
-                        if (err)
-                            callback(err, null);
-                        else {
-                            RecentSearchDoc.remove({_id: recentSearches[0]._id},
-                                function(err) {
-                                    if (err)
-                                        callback(err, null);
-                                    else
-                                        recentSearchDoc.save(callback);
-                                });
-                        }
-                    });
+                RecentSearchDoc.find({$query: {}, $orderby: {_id : 1}})
+                    .limit(1).exec(
+                        function(err, recentSearches) {
+                            if (err)
+                                callback(err, null);
+                            else {
+                                recentSearches[0].remove(
+                                    function(err) {
+                                        if (err)
+                                            callback(err, null);
+                                        else
+                                            recentSearchDoc.save(callback);
+                                    });
+                            }
+                        });
             } else
                 recentSearchDoc.save(callback);
         });
@@ -60,21 +62,22 @@ exports.insertQuery = function insertQuery(query, callback) {
 };
 
 exports.findRecentQueries = function findRecentQueries(callback) {
-    RecentSearchDoc.find({$query: {}, $orderby: {_id : -1}},
-        function(err, recentSearches) {
-            if (err)
-                callback(err, null);
-            else {
-                var ret = [];
-                
-                for (var key in recentSearches) {
-                    ret.push({
-                        term: recentSearches[key].term,
-                        when: new Date(parseInt(recentSearches[key]._id.toString().substring(0, 8), 16) * 1000)
-                    });
+    RecentSearchDoc.find({$query: {}, $orderby: {_id : -1}})
+        .limit(nRecents).exec(
+            function(err, recentSearches) {
+                if (err)
+                    callback(err, null);
+                else {
+                    var ret = [];
+                    
+                    for (var key in recentSearches) {
+                        ret.push({
+                            term: recentSearches[key].term,
+                            when: new Date(parseInt(recentSearches[key]._id.toString().substring(0, 8), 16) * 1000)
+                        });
+                    }
+                    
+                    callback(null, ret);
                 }
-                
-                callback(null, ret);
-            }
-        });
+            });
 };
